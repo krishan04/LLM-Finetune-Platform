@@ -52,6 +52,17 @@ def run_training_job(experiment_id: str):
         # add training loss placeholder
         metrics["loss"] = 0.0
 
+        # Register fully tuned physically rendered pipeline locally onto DB models
+        from app.services.model_service import ModelService
+        model_record = ModelService.register_model(
+            db,
+            experiment.user_id,
+            config["base_model"],
+            model_path
+        )
+        experiment.model_id = model_record.id
+        db.commit()
+
         # 6. mark completed
         ExperimentRepository.mark_completed(db, experiment, metrics)
 

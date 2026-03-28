@@ -18,8 +18,17 @@ def run_training_pipeline(config):
     tokenizer.pad_token = tokenizer.eos_token
 
     def tokenize(example):
+        # Dynamically support both {"text": ...} and {"instruction": ..., "output": ...} formats
+        if "text" in example:
+            content = example["text"]
+        else:
+            content = f"{example.get('instruction', '')}\n"
+            if example.get("input"):
+                content += f"{example['input']}\n"
+            content += example.get("output", "")
+            
         tokenized = tokenizer(
-            example["text"],
+            content,
             truncation=True,
             padding="max_length",
             max_length=512
@@ -52,8 +61,14 @@ def run_training_pipeline(config):
         )
 
     # 4. Apply LoRA
-    # Fix: GPT-2 architecture uses 'c_attn', while LLaMA/Mistral uses 'q_proj' and 'v_proj'
-    target_modules = ["c_attn"] if "gpt2" in base_model.lower() else ["q_proj", "v_proj"]
+    # Fix: Architecture-specific matching for LoRA target modules
+    base_lower = base_model.lower()
+    if "gpt2" in base_lower:
+        target_modules = ["c_attn"]
+    elif "pythia" in base_lower or "gpt-neox" in base_lower:
+        target_modules = ["query_key_value"]
+    else:
+        target_modules = ["q_proj", "v_proj"]
 
     lora_config = LoraConfig(
         r=config["lora_r"],
@@ -70,7 +85,7 @@ def run_training_pipeline(config):
     training_args = TrainingArguments(
         output_dir=output_dir,
         per_device_train_batch_size=2,
-        num_train_epochs=1,
+        num_train_epochs=20, # Increased from 1 to 20 to allow small models to memorize tiny datasets!
         learning_rate=config["learning_rate"],
         logging_steps=10,
         save_steps=50,
