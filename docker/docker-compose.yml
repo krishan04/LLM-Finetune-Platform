@@ -11,9 +11,51 @@ services:
       POSTGRES_DB: llm_db
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   redis:
     image: redis:7
     container_name: llm_redis
     ports:
       - "6379:6379"
+
+  api:
+    build: .
+    container_name: llm_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/llm_db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      - db
+      - redis
+
+  worker:
+    build: .
+    container_name: llm_worker
+    restart: always
+    command: celery -A app.workers.celery_app worker --loglevel=info -c 2
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/llm_db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./storage:/app/storage
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    depends_on:
+      - db
+      - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  pgdata:
