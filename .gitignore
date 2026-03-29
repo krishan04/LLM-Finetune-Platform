@@ -1,0 +1,26 @@
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# Environment Variables
+.env
+.env.*
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Storage / Artifacts (Models and Datasets are too large for GitHub)
+storage/models/*
+storage/datasets/*
+!storage/models/.gitkeep
+!storage/datasets/.gitkeep
+
+# Logs and DB
+*.log
+*.sqlite3
+.DS_Store
