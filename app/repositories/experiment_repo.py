@@ -39,3 +39,12 @@ class ExperimentRepository:
         exp.status = "failed"
         exp.training_logs = error
         db.commit()
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(Experiment).order_by(Experiment.started_at.desc()).all()
+
+    @staticmethod
+    def get_by_id(db: Session, exp_id):
+        return db.query(Experiment).filter(Experiment.id == exp_id).first()
+

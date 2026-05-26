@@ -27,3 +27,12 @@ class TrainingService:
         run_training_job.delay(str(experiment.id))
 
         return experiment
+
+    @staticmethod
+    def list_experiments(db: Session):
+        return ExperimentRepository.get_all(db)
+
+    @staticmethod
+    def get_experiment(db: Session, exp_id: str):
+        return ExperimentRepository.get_by_id(db, exp_id)
+

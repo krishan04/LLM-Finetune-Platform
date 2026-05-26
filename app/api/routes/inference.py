@@ -14,6 +14,10 @@ def generate(model_id: str, prompt: str, db: Session = Depends(get_db)):
     if not model_record:
         return {"error": "Model not strictly registered internally!"}
 
+    import os
+    if not os.path.exists(model_record.adapter_path) or not os.path.exists(os.path.join(model_record.adapter_path, "adapter_config.json")):
+        return {"error": f"Model weights for '{model_record.base_model}' are not present on disk. The folder '{model_record.adapter_path}' might have been deleted."}
+
     model, tokenizer = ModelService.load_model(model_record)
 
     inputs = tokenizer(prompt, return_tensors="pt")

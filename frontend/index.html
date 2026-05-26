@@ -1,0 +1,293 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity LLM Fine-tuning Platform</title>
+    <!-- Modern Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css?v=3">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <span class="brand-name">Orbit LLM</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="datasets">
+                    <i class="fa-solid fa-database"></i>
+                    <span>Datasets</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="training">
+                    <i class="fa-solid fa-circle-play"></i>
+                    <span>Train Model</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="playground">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Playground</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="server-status">
+                    <span class="status-indicator online"></span>
+                    <span>Control Plane API</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <!-- Top Header -->
+            <header class="top-header">
+                <h1 id="page-title">Dashboard</h1>
+                <div class="user-profile">
+                    <i class="fa-regular fa-bell header-icon"></i>
+                    <div class="avatar"><i class="fa-solid fa-user-astronaut"></i></div>
+                    <span class="user-name">Developer</span>
+                </div>
+            </header>
+
+            <!-- TAB: Dashboard -->
+            <section id="tab-dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Total Datasets</span>
+                            <span class="stat-value" id="stat-datasets-count">-</span>
+                        </div>
+                        <div class="stat-icon purple"><i class="fa-solid fa-folder-open"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Trained Models</span>
+                            <span class="stat-value" id="stat-models-count">-</span>
+                        </div>
+                        <div class="stat-icon blue"><i class="fa-solid fa-microchip"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Active Experiments</span>
+                            <span class="stat-value" id="stat-experiments-count">-</span>
+                        </div>
+                        <div class="stat-icon cyan"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                </div>
+
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2>Fine-tuning Jobs & Experiments</h2>
+                        <button class="btn btn-secondary btn-sm" id="btn-refresh-experiments">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Job / Experiment ID</th>
+                                    <th>Dataset</th>
+                                    <th>Base Model</th>
+                                    <th>Status</th>
+                                    <th>Loss</th>
+                                    <th>Duration / Timestamp</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="experiments-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading-state">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Loading jobs history...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: Datasets -->
+            <section id="tab-datasets" class="tab-content">
+                <div class="grid-2col">
+                    <!-- Left: Upload Dataset -->
+                    <div class="section-container">
+                        <h2>Upload Training Dataset</h2>
+                        <p class="section-description">Upload JSON, CSV, or TXT datasets. Large files are safely streamed chunk-by-chunk to disk.</p>
+                        
+                        <div class="upload-dropzone" id="upload-zone">
+                            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                            <h3>Drag & drop your file here</h3>
+                            <span>or click to browse files</span>
+                            <input type="file" id="dataset-file-input" accept=".json,.csv,.txt" style="display: none;">
+                        </div>
+
+                        <div class="upload-progress-container" id="upload-progress-box" style="display: none;">
+                            <div class="upload-progress-info">
+                                <span id="upload-filename">dataset.json</span>
+                                <span id="upload-percentage">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="upload-bar-fill" style="width: 0%;"></div>
+                            </div>
+                            <span class="upload-status" id="upload-status-text">Uploading chunks...</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Datasets List -->
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h2>Your Datasets</h2>
+                            <button class="btn btn-secondary btn-sm" id="btn-refresh-datasets">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+                        <div class="dataset-list" id="datasets-container">
+                            <div class="loading-state">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading datasets...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: Training -->
+            <section id="tab-training" class="tab-content">
+                <div class="section-container max-w-700">
+                    <h2>Launch Fine-tuning Run</h2>
+                    <p class="section-description">Configure your hyperparameters and submit an asynchronous training job to the Celery worker queue.</p>
+                    
+                    <form id="training-form" class="form-container">
+                        <div class="form-group">
+                            <label for="train-dataset-select">Select Dataset <span class="required">*</span></label>
+                            <select id="train-dataset-select" required>
+                                <option value="" disabled selected>Choose a dataset...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="train-base-model">Base Model Identifier <span class="required">*</span></label>
+                            <input type="text" id="train-base-model" placeholder="e.g. EleutherAI/pythia-70m or sshleifer/tiny-gpt2" required>
+                            <span class="input-tip">Hugging Face hub repository name. The worker will download weights if not cached.</span>
+                        </div>
+
+                        <div class="grid-2col" style="gap: 1.5rem;">
+                            <div class="form-group">
+                                <label for="train-lora-r">LoRA Rank (Rank parameter 'r')</label>
+                                <div class="range-container">
+                                    <input type="range" id="train-lora-r" min="4" max="64" step="4" value="8">
+                                    <span class="range-val" id="lora-r-val">8</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="train-lr">Learning Rate</label>
+                                <input type="number" id="train-lr" step="0.00001" min="0.00001" max="0.01" value="0.0002">
+                                <span class="input-tip">Default is 2e-4 (0.0002)</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="btn-submit-training">
+                            <i class="fa-solid fa-rocket"></i> Launch Training Job
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB: Playground -->
+            <section id="tab-playground" class="tab-content">
+                <div class="playground-layout">
+                    <!-- Left Column: Settings -->
+                    <div class="playground-sidebar">
+                        <h3>Model Selection</h3>
+                        <div class="form-group">
+                            <select id="playground-model-select">
+                                <option value="" disabled selected>Select a trained model...</option>
+                            </select>
+                        </div>
+
+                        <hr class="sidebar-divider">
+
+                        <h3>Generation Params</h3>
+                        <div class="form-group">
+                            <label for="param-length">Max Length: <span id="val-length">100</span></label>
+                            <input type="range" id="param-length" min="10" max="256" step="5" value="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="param-temp">Temperature: <span id="val-temp">0.7</span></label>
+                            <input type="range" id="param-temp" min="0.1" max="1.5" step="0.05" value="0.7">
+                        </div>
+                        <div class="form-group">
+                            <label for="param-reppen">Repetition Penalty: <span id="val-reppen">1.2</span></label>
+                            <input type="range" id="param-reppen" min="1.0" max="2.0" step="0.05" value="1.2">
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Interactive Chat -->
+                    <div class="playground-chat">
+                        <div class="chat-header" id="active-model-name">
+                            No model selected. Select a custom model from the sidebar parameters to start testing.
+                        </div>
+
+                        <div class="chat-messages" id="playground-chat-log">
+                            <div class="system-bubble">
+                                Welcome to the Inference Playground. Select a model, type a prompt, and test your fine-tuned weights instantly!
+                            </div>
+                        </div>
+
+                        <div class="chat-input-area">
+                            <textarea id="playground-prompt-input" placeholder="Type a prompt to test your model (e.g. 'india capital?')..." disabled></textarea>
+                            <button id="btn-send-playground" class="btn btn-primary" disabled>
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal" id="details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Job Details</h3>
+                <span class="modal-close" id="btn-close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-val" id="modal-status">-</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="detail-label">Loss</span>
+                    <span class="detail-val" id="modal-loss">-</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="detail-label">Accuracy</span>
+                    <span class="detail-val" id="modal-accuracy">-</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="detail-label">Hyperparameters</span>
+                    <pre class="code-block" id="modal-hyperparams">-</pre>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="detail-label">Execution Logs</span>
+                    <pre class="code-block logs-block" id="modal-logs">-</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js?v=3"></script>
+</body>
+</html>

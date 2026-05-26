@@ -64,5 +64,97 @@ Here is exactly what happens when a User uploads a dataset:
 
 ---
 
+## 🏗️ Architectural Diagrams & Models
+
+### 1. Entity Relationship Diagram (ERD)
+The database strictly utilizes PostgreSQL UUIDs and enforces the following relational mapping across the core platform:
+
+```mermaid
+erDiagram
+    USERS ||--o{ DATASETS : uploads
+    USERS ||--o{ MODELS : owns
+    USERS ||--o{ EXPERIMENTS : runs
+    DATASETS ||--o| DATASET_METADATA : contains
+    DATASETS ||--o{ EXPERIMENTS : used_in
+    MODELS ||--o{ EXPERIMENTS : configures
+    EXPERIMENTS ||--o| TRAINING_JOBS : triggers
+
+    USERS {
+        UUID id PK
+        String password_hash
+    }
+    DATASETS {
+        UUID id PK
+        UUID user_id FK
+        String name
+        String file_path
+        String status
+    }
+    DATASET_METADATA {
+        UUID id PK
+        UUID dataset_id FK
+        Integer row_count
+    }
+    MODELS {
+        UUID id PK
+        UUID user_id FK
+        String name
+    }
+    EXPERIMENTS {
+        UUID id PK
+        UUID user_id FK
+        UUID dataset_id FK
+        UUID model_id FK
+        String status
+        Float accuracy
+        Float loss
+    }
+    TRAINING_JOBS {
+        UUID id PK
+        UUID experiment_id FK
+        String status
+    }
+```
+
+### 2. Asynchronous Task Architecture (Training Engine)
+For ML Fine-tuning, the platform utilizes a decoupled asynchronous queue to prevent blocking the FastAPI event loop during heavy GPU operations.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant FastAPI
+    participant PostgreSQL
+    participant Redis
+    participant Celery GPU Worker
+
+    User->>FastAPI: POST /training/start (experiment_id)
+    FastAPI->>PostgreSQL: Update Experiment Status (Pending)
+    FastAPI->>Redis: Publish Training Task
+    FastAPI-->>User: Return Job ID (202 Accepted)
+    
+    Redis-->>Celery GPU Worker: Consume Task
+    Celery GPU Worker->>PostgreSQL: Update Job Status (Running)
+    Celery GPU Worker->>Celery GPU Worker: Execute LLM Fine-Tuning (CUDA)
+    Celery GPU Worker->>PostgreSQL: Save Metrics (Loss, Accuracy)
+    Celery GPU Worker->>PostgreSQL: Update Job Status (Completed)
+```
+
+### 3. Planned Security & Authentication Flow
+Currently utilizing a placeholder UUID, the platform will implement JWT-based authentication to secure endpoints.
+
+```mermaid
+flowchart TD
+    A[Client] -->|POST /auth/login| B(FastAPI Auth Route)
+    B -->|Validate Credentials| C{Database}
+    C -->|Valid| D[Generate JWT Token]
+    C -->|Invalid| E[401 Unauthorized]
+    D --> A
+    A -->|Bearer Token| F[Protected Routes]
+    F -->|Verify Token| G(Dependency Injector)
+    G -->|Extract UUID| H[Business Logic]
+```
+
+---
+
 ## ⏭️ Architecture Roadmap
 We are fully scheduled to advance to **Phase 3: Training System (CORE ENGINE)** which implements scalable distributed background tasks utilizing Celery and Redis queuing nodes enabling explicit ML Fine-tuning tasks natively!

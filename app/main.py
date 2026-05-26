@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import app.db.base # Loads all models to the SQLAlchemy MetaData registry
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -12,9 +14,12 @@ app.include_router(training.router)
 app.include_router(models.router)
 app.include_router(inference.router)
 
+# Mount static files folder
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
 @app.get("/")
 def read_root():
-    return {"status": "ok"}
+    return FileResponse("frontend/index.html")
 
 @app.get("/test-db")
 def test_db(db: Session = Depends(get_db)):
